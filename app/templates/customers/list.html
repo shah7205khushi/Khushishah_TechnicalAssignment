@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Savyant Systems{% endblock %}
+{% block page_header %}Customer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span class="card-title">Customers Directory</span>
+
+            {% if current_user.is_admin %}
+            <!-- Status Tabs for Admin -->
+            <div style="display: flex; gap: 6px;">
+                <a href="{{ url_for('customers.list_customers', q=search_query) }}" 
+                   class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %}">
+                    All
+                </a>
+                <a href="{{ url_for('customers.list_customers', status='active', q=search_query) }}" 
+                   class="btn btn-sm {% if current_status == 'active' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Active
+                </a>
+                <a href="{{ url_for('customers.list_customers', status='inactive', q=search_query) }}" 
+                   class="btn btn-sm {% if current_status == 'inactive' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Inactive
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <!-- Search Form -->
+            <form method="GET" action="{{ url_for('customers.list_customers') }}" style="display: flex; gap: 6px;">
+                {% if current_status %}
+                    <input type="hidden" name="status" value="{{ current_status }}">
+                {% endif %}
+                <input type="text" 
+                       name="q" 
+                       value="{{ search_query or '' }}" 
+                       class="form-control" 
+                       placeholder="Search name, email, mobile..." 
+                       style="width: 220px; padding: 6px 10px; font-size: 12.5px;">
+                <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+                {% if search_query %}
+                    <a href="{{ url_for('customers.list_customers', status=current_status) }}" class="btn btn-secondary btn-sm" title="Clear search">✕</a>
+                {% endif %}
+            </form>
+
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('customers.create_customer') }}" class="btn btn-primary btn-sm">
+                + Add Customer
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Email Address</th>
+                    <th>Mobile</th>
+                    <th>City</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Orders</th>
+                    {% if current_user.is_admin %}
+                    <th class="text-right">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if customer_data %}
+                    {% for item in customer_data %}
+                    {% set c = item.customer %}
+                    <tr>
+                        <td><strong>{{ c.name }}</strong></td>
+                        <td>{{ c.email or '-' }}</td>
+                        <td>{{ c.mobile or '-' }}</td>
+                        <td>{{ c.city or '-' }}</td>
+                        <td class="text-center">
+                            <span class="badge badge-{{ c.status }}">
+                                {{ c.status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-secondary">{{ item.order_count }}</span>
+                        </td>
+                        {% if current_user.is_admin %}
+                        <td class="text-right" style="white-space: nowrap;">
+                            <a href="{{ url_for('customers.edit_customer', customer_id=c.id) }}" 
+                               class="btn btn-secondary btn-sm" style="padding: 3px 8px;">
+                                Edit
+                            </a>
+
+                            <!-- Toggle Status Button -->
+                            <form method="POST" action="{{ url_for('customers.toggle_status', customer_id=c.id) }}" style="display: inline;">
+                                <button type="submit" 
+                                        class="btn btn-secondary btn-sm" 
+                                        style="padding: 3px 8px;"
+                                        title="Click to toggle between active and inactive">
+                                    {{ 'Deactivate' if c.status == 'active' else 'Activate' }}
+                                </button>
+                            </form>
+
+                            <!-- Safe Delete Button -->
+                            <form method="POST" 
+                                  action="{{ url_for('customers.delete_customer', customer_id=c.id) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirmAction('{% if item.can_delete %}Delete customer {{ c.name }}? This action cannot be undone.{% else %}Cannot delete {{ c.name }} because {{ item.order_count }} order(s) reference them. The system will prompt you to deactivate instead.{% endif %}')">
+                                <button type="submit" 
+                                        class="btn btn-sm {% if item.can_delete %}btn-danger{% else %}btn-secondary{% endif %}" 
+                                        style="padding: 3px 8px; {% if not item.can_delete %}opacity: 0.6;{% endif %}"
+                                        title="{% if item.can_delete %}Delete customer{% else %}Referenced by orders: deactivation required{% endif %}">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="{% if current_user.is_admin %}7{% else %}6{% endif %}" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No customers found matching your criteria.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

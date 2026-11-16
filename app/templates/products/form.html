@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Product - Savyant Systems{% endblock %}
+{% block page_header %}{{ action }} Product{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">{{ action }} Product Details</span>
+            <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary btn-sm">
+                ← Back to List
+            </a>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" 
+                  action="{{ url_for('products.create_product') if action == 'Create' else url_for('products.edit_product', product_id=product.id) }}" 
+                  data-prevent-duplicate>
+                
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="product_code" class="form-label required">Product Code (SKU)</label>
+                        <input type="text" 
+                               id="product_code" 
+                               name="product_code" 
+                               class="form-control" 
+                               placeholder="e.g. PRD-101" 
+                               value="{{ product.product_code if product else '' }}" 
+                               required 
+                               autofocus 
+                               style="text-transform: uppercase;">
+                        <div class="form-help">Must be unique across all products.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="form-label required">Product Name</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               class="form-control" 
+                               placeholder="e.g. Wireless Noise-Cancelling Headphones" 
+                               value="{{ product.name if product else '' }}" 
+                               required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="category" class="form-label">Category</label>
+                        <input type="text" 
+                               id="category" 
+                               name="category" 
+                               class="form-control" 
+                               placeholder="e.g. Accessories, Displays, Audio" 
+                               value="{{ product.category if product else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price" class="form-label required">Unit Price (₹)</label>
+                        <input type="number" 
+                               id="price" 
+                               name="price" 
+                               class="form-control" 
+                               step="0.01" 
+                               min="0" 
+                               placeholder="0.00" 
+                               value="{{ product.price if product else '' }}" 
+                               required>
+                        <div class="form-help">Monetary value rounded to 2 decimal places.</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    {% if action == 'Create' %}
+                    <div class="form-group">
+                        <label for="stock_quantity" class="form-label required">Initial Opening Stock</label>
+                        <input type="number" 
+                               id="stock_quantity" 
+                               name="stock_quantity" 
+                               class="form-control" 
+                               min="0" 
+                               step="1" 
+                               value="0" 
+                               required>
+                        <div class="form-help">Whole numbers only. Will be recorded as OPENING_STOCK.</div>
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <label class="form-label">Current Stock</label>
+                        <input type="text" 
+                               class="form-control" 
+                               value="{{ product.stock_quantity }} units" 
+                               disabled 
+                               readonly>
+                        <div class="form-help">
+                            To adjust inventory, use the 
+                            <a href="{{ url_for('products.adjust_stock', product_id=product.id) }}">Stock Adjustment form</a>.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="status" class="form-label required">Status</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="active" {% if not product or product.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if product and product.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Save Product' if action == 'Create' else 'Update Product' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

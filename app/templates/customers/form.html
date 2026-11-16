@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Customer - Savyant Systems{% endblock %}
+{% block page_header %}{{ action }} Customer{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">{{ action }} Customer Details</span>
+            <a href="{{ url_for('customers.list_customers') }}" class="btn btn-secondary btn-sm">
+                ← Back to List
+            </a>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" 
+                  action="{{ url_for('customers.create_customer') if action == 'Create' else url_for('customers.edit_customer', customer_id=customer.id) }}" 
+                  data-prevent-duplicate>
+                
+                <div class="form-group">
+                    <label for="name" class="form-label required">Customer / Company Name</label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           class="form-control" 
+                           placeholder="e.g. Acme Industrial Traders" 
+                           value="{{ customer.name if customer else '' }}" 
+                           required 
+                           autofocus>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               class="form-control" 
+                               placeholder="e.g. orders@acme.com" 
+                               value="{{ customer.email if customer else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile" class="form-label">Mobile Number</label>
+                        <input type="text" 
+                               id="mobile" 
+                               name="mobile" 
+                               class="form-control" 
+                               placeholder="e.g. 9876543210" 
+                               value="{{ customer.mobile if customer else '' }}">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" 
+                               id="city" 
+                               name="city" 
+                               class="form-control" 
+                               placeholder="e.g. Mumbai" 
+                               value="{{ customer.city if customer else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status" class="form-label required">Status</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="active" {% if not customer or customer.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if customer and customer.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('customers.list_customers') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Save Customer' if action == 'Create' else 'Update Customer' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

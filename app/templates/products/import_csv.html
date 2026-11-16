@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Import Products CSV - Savyant Systems{% endblock %}
+{% block page_header %}Bulk Product Import{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Bulk Import Products via CSV</span>
+            <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary btn-sm">
+                ← Back to Products
+            </a>
+        </div>
+        <div class="card-body" style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 36px; margin-bottom: 12px;">📥</div>
+            <h3 style="font-size: 17px; margin-bottom: 8px;">CSV Bulk Import Module</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; max-width: 480px; margin: 0 auto 20px auto;">
+                All-or-nothing transactional product import will be activated in Step 7 on a dedicated Git feature branch.
+            </p>
+            <a href="{{ url_for('products.list_products') }}" class="btn btn-primary">
+                Return to Product Master
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

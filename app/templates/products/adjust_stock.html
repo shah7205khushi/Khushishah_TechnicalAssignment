@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Adjust Stock - {{ product.product_code }} - Savyant Systems{% endblock %}
+{% block page_header %}Inventory Adjustment{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Adjust Inventory: {{ product.product_code }}</span>
+            <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary btn-sm">
+                ← Back to Products
+            </a>
+        </div>
+
+        <div class="card-body">
+            <!-- Product Summary Banner -->
+            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-main);">
+                    {{ product.name }}
+                </div>
+                <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 16px;">
+                    <span>Code: <strong>{{ product.product_code }}</strong></span>
+                    <span>Category: <strong>{{ product.category or 'General' }}</strong></span>
+                    <span>Current Available Stock: <strong style="color: var(--primary); font-size: 14px;">{{ product.stock_quantity }} units</strong></span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('products.adjust_stock', product_id=product.id) }}" data-prevent-duplicate>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="adjustment_type" class="form-label required">Adjustment Type</label>
+                        <select id="adjustment_type" name="adjustment_type" class="form-control" required>
+                            <option value="increase">Increase Stock (+)</option>
+                            <option value="decrease">Decrease Stock (-)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity" class="form-label required">Quantity</label>
+                        <input type="number" 
+                               id="quantity" 
+                               name="quantity" 
+                               class="form-control" 
+                               min="1" 
+                               step="1" 
+                               placeholder="e.g. 10" 
+                               required>
+                        <div class="form-help">Must be a whole number greater than 0.</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reason" class="form-label required">Mandatory Reason / Notes</label>
+                    <textarea id="reason" 
+                              name="reason" 
+                              class="form-control" 
+                              rows="3" 
+                              placeholder="e.g. Received new shipment batch PO-409, or Damaged during warehouse transit" 
+                              required></textarea>
+                    <div class="form-help">Audited and logged in the Stock Movements ledger.</div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Confirm Stock Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
