@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Savyant Systems{% endblock %}
+
+{% block unauth_content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <div class="auth-logo-sub">Savyant Systems</div>
+            <div class="auth-logo-title">Inventory & Orders</div>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 6px;">
+                Secure role-based portal
+            </p>
+        </div>
+
+        <div class="auth-card-body">
+            <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" data-prevent-duplicate>
+                <div class="form-group">
+                    <label for="email" class="form-label required">Email Address</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="form-control" 
+                           placeholder="e.g. admin@savyant.com" 
+                           value="{{ email or '' }}" 
+                           required 
+                           autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label required">Password</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-control" 
+                           placeholder="••••••••" 
+                           required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; margin-top: 8px;">
+                    Sign In to Portal
+                </button>
+            </form>
+
+            <!-- Quick Demo Credentials for Interview Reviewers -->
+            <div class="demo-account-box">
+                <div class="demo-account-title">
+                    <span>⚡ Quick Demo Credentials</span>
+                    <span style="font-size: 10px; color: #64748b; font-weight: normal;">Click to autofill</span>
+                </div>
+                <div class="demo-btn-group">
+                    <button type="button" class="btn-demo" onclick="fillCredentials('admin@savyant.com', 'Admin@123')">
+                        <strong>Admin User</strong>
+                        <div style="font-size: 10.5px; color: #64748b;">Full Access</div>
+                    </button>
+                    <button type="button" class="btn-demo" onclick="fillCredentials('sales@savyant.com', 'Sales@123')">
+                        <strong>Sales User</strong>
+                        <div style="font-size: 10.5px; color: #64748b;">Orders Only</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillCredentials(email, password) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = password;
+}
+</script>
+{% endblock %}

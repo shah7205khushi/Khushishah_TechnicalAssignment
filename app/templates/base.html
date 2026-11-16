@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Savyant Systems - Sales & Inventory{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user %}
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <span class="brand-badge">Savyant Systems</span>
+                <div class="brand-title">
+                    <span>📦</span> Inventory Hub
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Operations</div>
+                <a href="{{ url_for('orders.list_orders') }}" 
+                   class="nav-item {% if request.blueprint == 'orders' %}active{% endif %}">
+                    <span class="nav-icon">📋</span>
+                    <span>Sales Orders</span>
+                </a>
+
+                <div class="nav-section-label">Master Data</div>
+                <a href="{{ url_for('customers.list_customers') }}" 
+                   class="nav-item {% if request.blueprint == 'customers' %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span>Customers</span>
+                </a>
+                <a href="{{ url_for('products.list_products') }}" 
+                   class="nav-item {% if request.blueprint == 'products' and request.endpoint != 'products.import_csv' %}active{% endif %}">
+                    <span class="nav-icon">🏷️</span>
+                    <span>Products</span>
+                </a>
+
+                {% if current_user.is_admin %}
+                <div class="nav-section-label">Admin Management</div>
+                <a href="{{ url_for('products.import_csv') }}" 
+                   class="nav-item {% if request.endpoint == 'products.import_csv' %}active{% endif %}">
+                    <span class="nav-icon">📥</span>
+                    <span>CSV Import</span>
+                </a>
+                <a href="{{ url_for('reports.customer_sales') }}" 
+                   class="nav-item {% if request.blueprint == 'reports' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Reports & Analytics</span>
+                </a>
+                {% endif %}
+            </nav>
+
+            <!-- User Footer in Sidebar -->
+            <div class="sidebar-footer">
+                <div class="user-profile-widget">
+                    <div class="user-name-title" title="{{ current_user.email }}">{{ current_user.name }}</div>
+                    {% if current_user.is_admin %}
+                        <span class="user-role-tag role-admin">Administrator</span>
+                    {% else %}
+                        <span class="user-role-tag role-sales">Sales User</span>
+                    {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" class="btn-sidebar-logout">
+                        <span>↪</span> Log out
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <header class="top-navbar">
+                <div class="top-navbar-title">
+                    {% block page_header %}Dashboard{% endblock %}
+                </div>
+                <div class="top-navbar-meta">
+                    <span style="font-size: 12px; color: var(--text-muted);">
+                        Signed in as <strong>{{ current_user.name }}</strong> ({{ current_user.role }})
+                    </span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">
+                        Log out
+                    </a>
+                </div>
+            </header>
+
+            <main class="page-content">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <span>{{ message }}</span>
+                                    <button type="button" class="alert-close" onclick="closeAlert(this)">&times;</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
+        <!-- Unauthenticated View (e.g. Login) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span>{{ message }}</span>
+                            <button type="button" class="alert-close" onclick="closeAlert(this)">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block unauth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

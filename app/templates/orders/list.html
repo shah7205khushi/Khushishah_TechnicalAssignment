@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Orders - Savyant Systems{% endblock %}
+{% block page_header %}Sales Orders Management{% endblock %}
+
+{% block content %}
+<!-- Dashboard Quick Summary Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="card" style="margin-bottom: 0; padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Orders</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--text-main); margin-top: 4px;">{{ stats.total }}</div>
+    </div>
+    <div class="card" style="margin-bottom: 0; padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--warning); text-transform: uppercase;">Draft Orders</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--warning); margin-top: 4px;">{{ stats.draft }}</div>
+    </div>
+    <div class="card" style="margin-bottom: 0; padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--success); text-transform: uppercase;">Confirmed Orders</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--success); margin-top: 4px;">{{ stats.confirmed }}</div>
+    </div>
+    <div class="card" style="margin-bottom: 0; padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--danger); text-transform: uppercase;">Cancelled Orders</div>
+        <div style="font-size: 26px; font-weight: 700; color: var(--danger); margin-top: 4px;">{{ stats.cancelled }}</div>
+    </div>
+</div>
+
+<!-- Main Table Card -->
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="card-title">Orders List</span>
+            <!-- Filter Tabs -->
+            <div style="display: flex; gap: 6px;">
+                <a href="{{ url_for('orders.list_orders') }}" 
+                   class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %}">
+                    All
+                </a>
+                <a href="{{ url_for('orders.list_orders', status='draft') }}" 
+                   class="btn btn-sm {% if current_status == 'draft' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Draft
+                </a>
+                <a href="{{ url_for('orders.list_orders', status='confirmed') }}" 
+                   class="btn btn-sm {% if current_status == 'confirmed' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Confirmed
+                </a>
+                <a href="{{ url_for('orders.list_orders', status='cancelled') }}" 
+                   class="btn btn-sm {% if current_status == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
+                    Cancelled
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <!-- Order creation will be wired in Step 3 -->
+            <a href="#" class="btn btn-primary btn-sm" onclick="alert('Order Creation will be enabled in Step 3'); return false;">
+                + Create Sales Order
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th class="text-center">Items</th>
+                    <th class="text-right">Subtotal</th>
+                    <th class="text-right">Discount</th>
+                    <th class="text-right">Grand Total</th>
+                    <th class="text-center">Status</th>
+                    <th>Created By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if orders %}
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>{{ order.customer.name if order.customer else '-' }}</td>
+                        <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') if order.order_date else '-' }}</td>
+                        <td class="text-center">{{ order.items|length }}</td>
+                        <td class="text-right">₹{{ "%.2f"|format(order.subtotal) }}</td>
+                        <td class="text-right">₹{{ "%.2f"|format(order.discount_amount) }}</td>
+                        <td class="text-right"><strong>₹{{ "%.2f"|format(order.grand_total) }}</strong></td>
+                        <td class="text-center">
+                            <span class="badge badge-{{ order.status }}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td>{{ order.creator.name if order.creator else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No sales orders found{% if current_status %} with status '{{ current_status }}'{% endif %}.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

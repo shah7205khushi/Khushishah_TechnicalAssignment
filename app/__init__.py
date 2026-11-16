@@ -16,7 +16,7 @@ def create_app(config_class=Config):
     def inject_context():
         return {
             'current_user': get_current_user(),
-            'current_year': datetime.utcnow().year
+            'current_year': datetime.now().year
         }
 
     # Register Blueprints
