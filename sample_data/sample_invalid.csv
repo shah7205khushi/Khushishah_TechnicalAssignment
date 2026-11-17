@@ -1,0 +1,7 @@
+product_code,product_name,category,price,stock_quantity,status
+PRD-INV-001,Valid Initial Item,Accessories,1000.00,10,Active
+PRD-INV-001,Duplicate Item Code,Accessories,1200.00,5,Active
+PRD-INV-002,Negative Price Item,Accessories,-500.00,15,Active
+PRD-INV-003,Negative Stock Item,Accessories,800.00,-10,Active
+PRD-INV-004,Invalid Status Item,Accessories,950.00,20,Pending
+PRD-INV-005,,Accessories,300.00,10,Active

@@ -1,26 +1,116 @@
 {% extends "base.html" %}
 
-{% block title %}Import Products CSV - Savyant Systems{% endblock %}
-{% block page_header %}Bulk Product Import{% endblock %}
+{% block title %}CSV Product Import - Savyant Systems{% endblock %}
+{% block page_header %}Bulk Product Import (CSV){% endblock %}
 
 {% block content %}
-<div style="max-width: 680px; margin: 0 auto;">
+<div style="max-width: 800px; margin: 0 auto;">
+    <!-- Instructions & Downloads Card -->
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <span class="card-title">1. CSV Format & Guidelines</span>
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ url_for('products.download_sample', filename='sample_valid.csv') }}" class="btn btn-secondary btn-sm">
+                    ⬇ Download Valid Sample
+                </a>
+                <a href="{{ url_for('products.download_sample', filename='sample_invalid.csv') }}" class="btn btn-secondary btn-sm">
+                    ⬇ Download Invalid Sample
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 14px;">
+                Upload a comma-separated values (<code>.csv</code>) file with the exact header columns below. 
+                Import operates with <strong>strict all-or-nothing validation</strong>: if any single row contains an error, the entire batch is rejected.
+            </p>
+
+            <div style="background-color: #0f172a; color: #f8fafc; border-radius: var(--radius-md); padding: 12px 16px; font-family: monospace; font-size: 12.5px; overflow-x: auto; margin-bottom: 14px;">
+                <div>product_code,product_name,category,price,stock_quantity,status</div>
+                <div style="color: #94a3b8;">PRD-BULK-001,4K Ultra HD Webcam,Video,3500.00,25,Active</div>
+                <div style="color: #94a3b8;">PRD-BULK-002,USB Condenser Microphone,Audio,4200.00,15,Active</div>
+            </div>
+
+            <ul style="font-size: 12.5px; color: var(--text-muted); padding-left: 18px; line-height: 1.6;">
+                <li><code>product_code</code>: Unique alphanumeric identifier (must not exist in DB or earlier in file).</li>
+                <li><code>price</code>: Non-negative numeric decimal value ($ \ge 0 $).</li>
+                <li><code>stock_quantity</code>: Non-negative whole integer ($ \ge 0 $). Initial stock $> 0$ generates opening inventory movements.</li>
+                <li><code>status</code>: Either <strong>Active</strong> or <strong>Inactive</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Error Summary Table if validation failed -->
+    {% if errors %}
+    <div class="card" style="border-color: var(--danger); margin-bottom: 24px;">
+        <div class="card-header" style="background-color: var(--danger-bg); border-bottom-color: var(--danger-border);">
+            <span class="card-title" style="color: var(--danger);">
+                ⚠️ Import Rejected: {{ errors|length }} Error(s) Encountered
+            </span>
+            <span class="badge badge-danger">All-or-Nothing Enforced</span>
+        </div>
+        <div class="card-body" style="padding: 12px;">
+            <p style="font-size: 13px; color: var(--danger); margin-bottom: 12px;">
+                The database was not modified. Please correct the following row errors and re-upload:
+            </p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;" class="text-center">CSV Row #</th>
+                            <th style="width: 85%;">Error Description / Validation Failure</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for err in errors %}
+                        <tr>
+                            <td class="text-center">
+                                <span class="badge badge-danger" style="font-size: 12px; padding: 3px 8px;">
+                                    Row {{ err.row }}
+                                </span>
+                            </td>
+                            <td style="color: var(--text-main); font-size: 13px;">
+                                {{ err.reason }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Card -->
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Bulk Import Products via CSV</span>
+            <span class="card-title">2. Select & Upload File</span>
             <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary btn-sm">
                 ← Back to Products
             </a>
         </div>
-        <div class="card-body" style="text-align: center; padding: 40px 20px;">
-            <div style="font-size: 36px; margin-bottom: 12px;">📥</div>
-            <h3 style="font-size: 17px; margin-bottom: 8px;">CSV Bulk Import Module</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px; max-width: 480px; margin: 0 auto 20px auto;">
-                All-or-nothing transactional product import will be activated in Step 7 on a dedicated Git feature branch.
-            </p>
-            <a href="{{ url_for('products.list_products') }}" class="btn btn-primary">
-                Return to Product Master
-            </a>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('products.import_csv') }}" enctype="multipart/form-data" data-prevent-duplicate>
+                <div class="form-group">
+                    <label for="csv_file" class="form-label required">Choose CSV File</label>
+                    <input type="file" 
+                           id="csv_file" 
+                           name="csv_file" 
+                           class="form-control" 
+                           accept=".csv,text/csv" 
+                           required 
+                           style="padding: 10px;">
+                    <div class="form-help">Supported format: UTF-8 plain text (.csv)</div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('products.list_products') }}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 20px;">
+                        Upload & Import Batch
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

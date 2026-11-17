@@ -1,0 +1,6 @@
+product_code,product_name,category,price,stock_quantity,status
+PRD-BULK-001,4K Ultra HD Webcam,Video,3500.00,25,Active
+PRD-BULK-002,USB Condenser Microphone,Audio,4200.00,15,Active
+PRD-BULK-003,Adjustable Monitor Stand,Furniture,1250.00,40,Active
+PRD-BULK-004,Braided DisplayPort 1.4 Cable,Cables,650.00,60,Active
+PRD-BULK-005,Archived Serial Adapter,Adapters,180.00,0,Inactive
