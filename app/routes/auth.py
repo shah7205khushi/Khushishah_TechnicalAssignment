@@ -10,6 +10,16 @@ def get_current_user():
         user_id = session.get('user_id')
         if user_id:
             g.current_user = db.session.get(User, user_id)
+        elif request.authorization:
+            auth = request.authorization
+            if auth.username and auth.password:
+                user = User.query.filter_by(email=auth.username.strip().lower()).first()
+                if user and user.check_password(auth.password):
+                    g.current_user = user
+                else:
+                    g.current_user = None
+            else:
+                g.current_user = None
         else:
             g.current_user = None
     return g.current_user
