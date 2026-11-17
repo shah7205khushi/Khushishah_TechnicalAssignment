@@ -38,4 +38,18 @@ def create_app(config_class=Config):
     from app.routes.api import api_bp
     app.register_blueprint(api_bp)
 
+    # Error handlers
+    from flask import render_template, jsonify, request
+    @app.errorhandler(403)
+    def forbidden(error):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Forbidden: You do not have permission to access this resource.'}), 403
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def not_found(error):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Resource not found.'}), 404
+        return render_template('base.html'), 404
+
     return app

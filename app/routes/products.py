@@ -311,3 +311,19 @@ def adjust_stock(product_id):
 @admin_required
 def import_csv():
     return render_template('products/import_csv.html')
+
+@products_bp.route('/<int:product_id>/info', methods=['GET'])
+@login_required
+def get_product_info(product_id):
+    """JSON helper for dynamic frontend row calculation."""
+    product = db.session.get(Product, product_id)
+    if not product:
+        return {'error': 'Product not found'}, 404
+    return {
+        'id': product.id,
+        'product_code': product.product_code,
+        'name': product.name,
+        'price': float(product.price),
+        'stock_quantity': product.stock_quantity,
+        'status': product.status
+    }

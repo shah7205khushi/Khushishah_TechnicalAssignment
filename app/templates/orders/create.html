@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Create Sales Order - Savyant Systems{% endblock %}
+{% block page_header %}New Sales Order{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('orders.create_order') }}" onsubmit="return validateOrderForm(this)" data-prevent-duplicate>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <!-- Left Column: Customer & Items -->
+        <div>
+            <!-- Customer Card -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-header">
+                    <span class="card-title">1. Customer Information</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="customer_id" class="form-label required">Select Active Customer</label>
+                        <select id="customer_id" name="customer_id" class="form-control" required autofocus>
+                            <option value="">-- Choose Customer --</option>
+                            {% for c in customers %}
+                                <option value="{{ c.id }}">{{ c.name }} ({{ c.city or 'General' }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-help">Only active customers can be selected for new orders.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">2. Order Items</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">
+                        + Add Product Row
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="order-items-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Product</th>
+                                <th style="width: 15%;" class="text-center">Available Stock</th>
+                                <th style="width: 15%;" class="text-right">Unit Price</th>
+                                <th style="width: 12%;" class="text-center">Quantity</th>
+                                <th style="width: 14%;" class="text-right">Total (₹)</th>
+                                <th style="width: 4%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-items-body">
+                            <!-- Initial Row -->
+                            <tr class="order-item-row">
+                                <td>
+                                    <select name="product_id[]" class="form-control product-select" required>
+                                        <option value="">-- Choose Product --</option>
+                                        {% for p in products %}
+                                            <option value="{{ p.id }}">{{ p.product_code }} - {{ p.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" class="rate-hidden" value="0.00">
+                                </td>
+                                <td class="text-center stock-display">-</td>
+                                <td class="text-right rate-display" style="font-weight: 500;">₹0.00</td>
+                                <td class="text-center">
+                                    <input type="number" 
+                                           name="quantity[]" 
+                                           class="form-control quantity-input" 
+                                           min="1" 
+                                           step="1" 
+                                           value="1" 
+                                           required 
+                                           style="text-align: center; padding: 6px;">
+                                </td>
+                                <td class="text-right amount-display" style="font-weight: 600;">₹0.00</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm btn-remove-row" title="Remove Item" disabled>
+                                        ✕
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Order Calculation & Actions -->
+        <div>
+            <div class="card" style="position: sticky; top: 20px;">
+                <div class="card-header">
+                    <span class="card-title">3. Order Summary</span>
+                </div>
+                <div class="card-body">
+                    <!-- Subtotal -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="color: var(--text-muted); font-size: 13.5px;">Subtotal:</span>
+                        <strong id="subtotal-display" style="font-size: 15px;">₹0.00</strong>
+                    </div>
+
+                    <!-- Discount Input -->
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label for="discount_percentage" class="form-label" style="display: flex; justify-content: space-between;">
+                            <span>Discount Percentage:</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">(0% - 20%)</span>
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="number" 
+                                   id="discount_percentage" 
+                                   name="discount_percentage" 
+                                   class="form-control" 
+                                   min="0" 
+                                   max="20" 
+                                   step="0.1" 
+                                   value="0.0" 
+                                   required>
+                            <span style="font-weight: 600; color: var(--text-muted);">%</span>
+                        </div>
+                    </div>
+
+                    <!-- Discount Amount -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="color: var(--warning); font-size: 13.5px;">Discount Amount:</span>
+                        <strong id="discount-display" style="color: var(--warning); font-size: 15px;">- ₹0.00</strong>
+                    </div>
+
+                    <div style="border-top: 2px dashed var(--border-color); margin: 16px 0;"></div>
+
+                    <!-- Grand Total -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <span style="font-size: 15px; font-weight: 700; color: var(--text-main);">Grand Total:</span>
+                        <strong id="grand-total-display" style="font-size: 20px; font-weight: 800; color: var(--primary);">₹0.00</strong>
+                    </div>
+
+                    <div style="background-color: #f8fafc; border-radius: var(--radius-sm); padding: 10px; font-size: 11.5px; color: var(--text-muted); margin-bottom: 16px;">
+                        ℹ️ <em>Rates and available inventory are snapshotted upon draft creation. Order will be created in <strong>Draft</strong> status and does not deduct stock yet.</em>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px;">
+                        Create Order (Draft)
+                    </button>
+                    <a href="{{ url_for('orders.list_orders') }}" class="btn btn-secondary" style="width: 100%; margin-top: 8px;">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Row Template for dynamic row additions -->
+<template id="row-template">
+    <tr class="order-item-row">
+        <td>
+            <select name="product_id[]" class="form-control product-select" required>
+                <option value="">-- Choose Product --</option>
+                {% for p in products %}
+                    <option value="{{ p.id }}">{{ p.product_code }} - {{ p.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" class="rate-hidden" value="0.00">
+        </td>
+        <td class="text-center stock-display">-</td>
+        <td class="text-right rate-display" style="font-weight: 500;">₹0.00</td>
+        <td class="text-center">
+            <input type="number" 
+                   name="quantity[]" 
+                   class="form-control quantity-input" 
+                   min="1" 
+                   step="1" 
+                   value="1" 
+                   required 
+                   style="text-align: center; padding: 6px;">
+        </td>
+        <td class="text-right amount-display" style="font-weight: 600;">₹0.00</td>
+        <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm btn-remove-row" title="Remove Item">
+                ✕
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/order_form.js') }}"></script>
+<script>
+    const catalog = {{ products_json|safe }};
+    initOrderForm(catalog);
+</script>
+{% endblock %}

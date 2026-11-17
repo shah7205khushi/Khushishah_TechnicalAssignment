@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied (403) - Savyant Systems{% endblock %}
+{% block page_header %}Access Forbidden{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 40px auto; text-align: center;">
+    <div class="card" style="padding: 36px 24px;">
+        <div style="font-size: 48px; margin-bottom: 12px;">🚫</div>
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">
+            403 - Access Forbidden
+        </h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+            You do not have permission to view or manage this resource. Sales users may only access orders that they have created.
+        </p>
+        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-primary">
+            Return to Orders Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

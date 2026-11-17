@@ -27,7 +27,7 @@
 <!-- Main Table Card -->
 <div class="card">
     <div class="card-header">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <span class="card-title">Orders List</span>
             <!-- Filter Tabs -->
             <div style="display: flex; gap: 6px;">
@@ -51,8 +51,7 @@
         </div>
 
         <div>
-            <!-- Order creation will be wired in Step 3 -->
-            <a href="#" class="btn btn-primary btn-sm" onclick="alert('Order Creation will be enabled in Step 3'); return false;">
+            <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary btn-sm">
                 + Create Sales Order
             </a>
         </div>
@@ -71,13 +70,18 @@
                     <th class="text-right">Grand Total</th>
                     <th class="text-center">Status</th>
                     <th>Created By</th>
+                    <th class="text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% if orders %}
                     {% for order in orders %}
                     <tr>
-                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('orders.view_order', order_id=order.id) }}" style="font-weight: 700; color: var(--primary); text-decoration: none;">
+                                {{ order.order_number }}
+                            </a>
+                        </td>
                         <td>{{ order.customer.name if order.customer else '-' }}</td>
                         <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') if order.order_date else '-' }}</td>
                         <td class="text-center">{{ order.items|length }}</td>
@@ -90,11 +94,21 @@
                             </span>
                         </td>
                         <td>{{ order.creator.name if order.creator else '-' }}</td>
+                        <td class="text-right" style="white-space: nowrap;">
+                            <a href="{{ url_for('orders.view_order', order_id=order.id) }}" class="btn btn-secondary btn-sm" style="padding: 3px 8px;">
+                                View
+                            </a>
+                            {% if order.is_draft and (current_user.is_admin or order.created_by == current_user.id) %}
+                            <a href="{{ url_for('orders.edit_order', order_id=order.id) }}" class="btn btn-secondary btn-sm" style="padding: 3px 8px;">
+                                Edit
+                            </a>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--text-muted);">
                             No sales orders found{% if current_status %} with status '{{ current_status }}'{% endif %}.
                         </td>
                     </tr>
