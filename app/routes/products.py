@@ -327,3 +327,18 @@ def get_product_info(product_id):
         'stock_quantity': product.stock_quantity,
         'status': product.status
     }
+
+@products_bp.route('/stock-movements')
+@login_required
+def stock_movements_history():
+    """
+    Part 6 & Part 9 Requirement:
+    Stock Movement History: Product, movement type, quantity change, order, reason and timestamp.
+    """
+    movements = (
+        StockMovement.query
+        .order_by(StockMovement.id.desc())
+        .limit(200)
+        .all()
+    )
+    return render_template('products/stock_movements.html', movements=movements)

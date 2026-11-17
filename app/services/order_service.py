@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models.customer import Customer
 from app.models.product import Product
 from app.models.order import SalesOrder, SalesOrderItem
+from app.models.stock_movement import StockMovement
 
 def quantize_money(amount):
     """Round monetary values to two decimal places using standard ROUND_HALF_UP."""
@@ -194,3 +195,156 @@ class OrderService:
 
         db.session.commit()
         return order
+
+    @staticmethod
+    def confirm_order(order_id, user):
+        """
+        Confirms a Draft sales order and deducts inventory atomically.
+        Requirements (PDF Part 6):
+          - Check stock availability when confirming an order.
+          - If ANY product has insufficient stock, reject the ENTIRE confirmation (all-or-nothing).
+          - Concurrency Safety: Lock product rows with SELECT ... FOR UPDATE in sorted order.
+          - Save order status, stock changes, and stock movement records in one atomic transaction.
+          - Repeated confirmation requests must not deduct stock again.
+          - Confirmed orders become read-only.
+        """
+        order = db.session.get(SalesOrder, order_id)
+        if not order:
+            raise ValueError("Order not found.")
+
+        # Permission check: Sales User can only confirm their own orders
+        if user.is_sales_user and order.created_by != user.id:
+            raise PermissionError("Access denied: You cannot confirm another user's order.")
+
+        # Status checks & Repeated confirmation prevention
+        if order.status == SalesOrder.STATUS_CONFIRMED:
+            raise ValueError("Order is already confirmed. Repeated confirmation is not permitted.")
+        if order.status != SalesOrder.STATUS_DRAFT:
+            raise ValueError(f"Cannot confirm order with status '{order.status}'. Only Draft orders can be confirmed.")
+
+        if not order.items or len(order.items) == 0:
+            raise ValueError("Cannot confirm an order with no items.")
+
+        try:
+            # 1. Collect and sort product IDs to prevent database deadlocks under concurrency
+            product_ids = sorted(list(set(item.product_id for item in order.items)))
+
+            # 2. Acquire exclusive row-level locks on products using SELECT ... FOR UPDATE
+            locked_products = {
+                p.id: p
+                for p in (
+                    db.session.query(Product)
+                    .filter(Product.id.in_(product_ids))
+                    .order_by(Product.id.asc())
+                    .with_for_update()
+                    .all()
+                )
+            }
+
+            # 3. Check stock availability for EVERY item (all-or-nothing check)
+            for item in order.items:
+                product = locked_products.get(item.product_id)
+                if not product:
+                    raise ValueError(f"Product (ID: {item.product_id}) not found.")
+
+                if product.stock_quantity < item.quantity:
+                    raise ValueError(
+                        f"Insufficient stock for product '{product.name}' ({product.product_code}). "
+                        f"Requested: {item.quantity}, Available in stock: {product.stock_quantity}."
+                    )
+
+            # 4. If all products have sufficient stock, deduct quantities and create movements
+            for item in order.items:
+                product = locked_products[item.product_id]
+                product.stock_quantity -= item.quantity
+
+                movement = StockMovement(
+                    product_id=product.id,
+                    movement_type=StockMovement.TYPE_CONFIRM,
+                    quantity_change=-item.quantity,
+                    related_order_id=order.id,
+                    reason=f"Order {order.order_number} confirmed",
+                    created_by=user.id
+                )
+                db.session.add(movement)
+
+            # 5. Transition order status to Confirmed
+            order.status = SalesOrder.STATUS_CONFIRMED
+            order.updated_at = datetime.now()
+
+            # 6. Commit atomic transaction
+            db.session.commit()
+            return order
+
+        except Exception:
+            db.session.rollback()
+            raise
+
+    @staticmethod
+    def cancel_order(order_id, user):
+        """
+        Cancels a Draft or Confirmed sales order.
+        Requirements (PDF Part 6):
+          - Draft -> Cancel: No stock change.
+          - Confirmed -> Cancel: Restore deducted stock and log ORDER_CANCEL movements.
+          - Repeated cancellation requests must not restore stock again.
+          - Cancelled orders are terminal and read-only.
+        """
+        order = db.session.get(SalesOrder, order_id)
+        if not order:
+            raise ValueError("Order not found.")
+
+        # Permission check
+        if user.is_sales_user and order.created_by != user.id:
+            raise PermissionError("Access denied: You cannot cancel another user's order.")
+
+        # Status check
+        if order.status == SalesOrder.STATUS_CANCELLED:
+            raise ValueError("Order is already cancelled. Repeated cancellation is not permitted.")
+        if order.status not in [SalesOrder.STATUS_DRAFT, SalesOrder.STATUS_CONFIRMED]:
+            raise ValueError(f"Cannot cancel order with status '{order.status}'.")
+
+        previous_status = order.status
+
+        try:
+            # Case 1: Cancelling a Confirmed order -> Restore stock
+            if previous_status == SalesOrder.STATUS_CONFIRMED:
+                product_ids = sorted(list(set(item.product_id for item in order.items)))
+
+                # Lock product rows for update
+                locked_products = {
+                    p.id: p
+                    for p in (
+                        db.session.query(Product)
+                        .filter(Product.id.in_(product_ids))
+                        .order_by(Product.id.asc())
+                        .with_for_update()
+                        .all()
+                    )
+                }
+
+                for item in order.items:
+                    product = locked_products.get(item.product_id)
+                    if product:
+                        product.stock_quantity += item.quantity
+
+                        movement = StockMovement(
+                            product_id=product.id,
+                            movement_type=StockMovement.TYPE_CANCEL,
+                            quantity_change=item.quantity,
+                            related_order_id=order.id,
+                            reason=f"Order {order.order_number} cancelled - stock restored",
+                            created_by=user.id
+                        )
+                        db.session.add(movement)
+
+            # Transition status
+            order.status = SalesOrder.STATUS_CANCELLED
+            order.updated_at = datetime.now()
+
+            db.session.commit()
+            return order
+
+        except Exception:
+            db.session.rollback()
+            raise

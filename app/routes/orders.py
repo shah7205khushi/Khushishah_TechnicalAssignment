@@ -188,13 +188,27 @@ def edit_order(order_id):
 @orders_bp.route('/<int:order_id>/confirm', methods=['POST'])
 @login_required
 def confirm_order(order_id):
-    """Stub for Order Confirmation (will be fully implemented in Step 4)."""
-    flash('Order confirmation will be finalized in Step 4 (Order Lifecycle & Concurrency).', 'info')
+    user = get_current_user()
+    try:
+        order = OrderService.confirm_order(order_id, user)
+        flash(f'Sales Order "{order.order_number}" has been successfully CONFIRMED and inventory deducted.', 'success')
+    except PermissionError:
+        abort(403)
+    except Exception as e:
+        flash(f'Confirmation failed: {str(e)}', 'danger')
+
     return redirect(url_for('orders.view_order', order_id=order_id))
 
 @orders_bp.route('/<int:order_id>/cancel', methods=['POST'])
 @login_required
 def cancel_order(order_id):
-    """Stub for Order Cancellation (will be fully implemented in Step 4)."""
-    flash('Order cancellation will be finalized in Step 4 (Order Lifecycle & Concurrency).', 'info')
+    user = get_current_user()
+    try:
+        order = OrderService.cancel_order(order_id, user)
+        flash(f'Sales Order "{order.order_number}" has been CANCELLED.', 'info')
+    except PermissionError:
+        abort(403)
+    except Exception as e:
+        flash(f'Cancellation failed: {str(e)}', 'danger')
+
     return redirect(url_for('orders.view_order', order_id=order_id))
