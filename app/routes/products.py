@@ -307,10 +307,47 @@ def adjust_stock(product_id):
 
     return render_template('products/adjust_stock.html', product=product)
 
-@products_bp.route('/import-csv')
+@products_bp.route('/import-csv', methods=['GET', 'POST'])
 @admin_required
 def import_csv():
-    return render_template('products/import_csv.html')
+    user = get_current_user()
+    errors = []
+    
+    if request.method == 'POST':
+        if 'csv_file' not in request.files:
+            flash('No file was uploaded.', 'danger')
+            return render_template('products/import_csv.html', errors=[])
+
+        file = request.files['csv_file']
+        if file.filename == '':
+            flash('Please select a CSV file to upload.', 'danger')
+            return render_template('products/import_csv.html', errors=[])
+
+        if not file.filename.lower().endswith('.csv'):
+            flash('Only .csv files are supported.', 'danger')
+            return render_template('products/import_csv.html', errors=[])
+
+        from app.services.csv_service import CsvService
+        result = CsvService.parse_and_validate_csv(file.stream, user)
+
+        if result['success']:
+            flash(f"Successfully imported {result['imported_count']} product(s) with opening inventory.", 'success')
+            return redirect(url_for('products.list_products'))
+        else:
+            errors = result['errors']
+            flash(f"Import failed with {len(errors)} error(s). No products were imported (all-or-nothing rollback).", 'danger')
+
+    return render_template('products/import_csv.html', errors=errors)
+
+@products_bp.route('/download-sample/<filename>')
+@admin_required
+def download_sample(filename):
+    """Download valid or invalid sample CSV files."""
+    import os
+    from flask import send_from_directory, current_app
+    safe_filename = 'sample_valid.csv' if 'valid' in filename.lower() and 'invalid' not in filename.lower() else 'sample_invalid.csv'
+    directory = os.path.join(current_app.root_path, '..', 'sample_data')
+    return send_from_directory(os.path.abspath(directory), safe_filename, as_attachment=True)
 
 @products_bp.route('/<int:product_id>/info', methods=['GET'])
 @login_required
