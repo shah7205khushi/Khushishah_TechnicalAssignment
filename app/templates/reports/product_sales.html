@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Product Sales Summary - Savyant Systems{% endblock %}
+{% block page_header %}Product Sales Summary Report{% endblock %}
+
+{% block content %}
+<!-- Report Sub-Navigation Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap;">
+    <a href="{{ url_for('reports.customer_sales') }}" class="btn btn-sm btn-secondary">
+        👥 Customer Sales Summary
+    </a>
+    <a href="{{ url_for('reports.product_sales') }}" class="btn btn-sm btn-primary">
+        🏷️ Product Sales Summary
+    </a>
+    <a href="{{ url_for('reports.low_stock') }}" class="btn btn-sm btn-secondary">
+        ⚠️ Low Stock Report
+    </a>
+    <a href="{{ url_for('reports.stock_movements') }}" class="btn btn-sm btn-secondary">
+        🔄 Stock Movement History
+    </a>
+</div>
+
+<!-- Metrics Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="card" style="margin-bottom: 0; padding: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Units Sold</div>
+        <div style="font-size: 26px; font-weight: 800; color: var(--text-main); margin-top: 4px;">{{ report.total_units_sold }}</div>
+    </div>
+    <div class="card" style="margin-bottom: 0; padding: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--success); text-transform: uppercase;">Gross Sales Value (Before Discount)</div>
+        <div style="font-size: 26px; font-weight: 800; color: var(--success); margin-top: 4px;">₹{{ "%.2f"|format(report.total_gross_value) }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Product Sales Performance (Confirmed Orders Only)</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th class="text-center">Total Quantity Sold</th>
+                    <th class="text-right">Gross Sales Value (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if report.data %}
+                    {% for row in report.data %}
+                    <tr>
+                        <td><code>{{ row.product_code }}</code></td>
+                        <td><strong>{{ row.product_name }}</strong></td>
+                        <td>{{ row.category or 'General' }}</td>
+                        <td class="text-center">
+                            {% if row.total_quantity_sold > 0 %}
+                                <span class="badge badge-success">{{ row.total_quantity_sold }} units</span>
+                            {% else %}
+                                <span class="badge badge-secondary">0 units</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if row.gross_sales_value > 0 %}
+                                <strong style="color: var(--primary);">₹{{ "%.2f"|format(row.gross_sales_value) }}</strong>
+                            {% else %}
+                                <span style="color: var(--text-muted);">₹0.00</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No product sales recorded yet.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

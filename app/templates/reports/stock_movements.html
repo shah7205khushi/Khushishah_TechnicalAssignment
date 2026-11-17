@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Movement History - Savyant Systems{% endblock %}
+{% block page_header %}Inventory Movements & Audit Ledger{% endblock %}
+
+{% block content %}
+<!-- Report Sub-Navigation Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap;">
+    <a href="{{ url_for('reports.customer_sales') }}" class="btn btn-sm btn-secondary">
+        👥 Customer Sales Summary
+    </a>
+    <a href="{{ url_for('reports.product_sales') }}" class="btn btn-sm btn-secondary">
+        🏷️ Product Sales Summary
+    </a>
+    <a href="{{ url_for('reports.low_stock') }}" class="btn btn-sm btn-secondary">
+        ⚠️ Low Stock Report
+    </a>
+    <a href="{{ url_for('reports.stock_movements') }}" class="btn btn-sm btn-primary">
+        🔄 Stock Movement History
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Chronological Inventory Audit Ledger</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th class="text-center">Movement Type</th>
+                    <th class="text-center">Qty Change</th>
+                    <th>Related Order</th>
+                    <th>Reason / Notes</th>
+                    <th>Logged By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if movements %}
+                    {% for m in movements %}
+                    <tr>
+                        <td style="white-space: nowrap; font-size: 12.5px; color: var(--text-muted);">
+                            {{ m.created_at.strftime('%Y-%m-%d %H:%M:%S') if m.created_at else '-' }}
+                        </td>
+                        <td>
+                            <code>{{ m.product.product_code if m.product else '-' }}</code>
+                        </td>
+                        <td>
+                            <strong>{{ m.product.name if m.product else '-' }}</strong>
+                        </td>
+                        <td class="text-center">
+                            {% if m.movement_type == 'OPENING_STOCK' %}
+                                <span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">Opening</span>
+                            {% elif m.movement_type == 'ORDER_CONFIRM' %}
+                                <span class="badge badge-danger">Order Confirm</span>
+                            {% elif m.movement_type == 'ORDER_CANCEL' %}
+                                <span class="badge badge-success">Order Cancel</span>
+                            {% else %}
+                                <span class="badge" style="background:#f3e8ff; color:#6b21a8; border:1px solid #e9d5ff;">Adjustment</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if m.quantity_change > 0 %}
+                                <strong style="color: var(--success);">+{{ m.quantity_change }}</strong>
+                            {% else %}
+                                <strong style="color: var(--danger);">{{ m.quantity_change }}</strong>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if m.order %}
+                                <a href="{{ url_for('orders.view_order', order_id=m.order.id) }}" style="font-weight: 600; color: var(--primary);">
+                                    {{ m.order.order_number }}
+                                </a>
+                            {% else %}
+                                <span style="color: var(--text-muted);">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 250px; font-size: 12.5px;">
+                            {{ m.reason or '-' }}
+                        </td>
+                        <td style="font-size: 12.5px;">
+                            {{ m.creator.name if m.creator else '-' }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No stock movement records logged yet.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

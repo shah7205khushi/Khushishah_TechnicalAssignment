@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Sales Summary - Savyant Systems{% endblock %}
+{% block page_header %}Customer Sales Summary Report{% endblock %}
+
+{% block content %}
+<!-- Report Sub-Navigation Tabs -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap;">
+    <a href="{{ url_for('reports.customer_sales') }}" class="btn btn-sm btn-primary">
+        👥 Customer Sales Summary
+    </a>
+    <a href="{{ url_for('reports.product_sales') }}" class="btn btn-sm btn-secondary">
+        🏷️ Product Sales Summary
+    </a>
+    <a href="{{ url_for('reports.low_stock') }}" class="btn btn-sm btn-secondary">
+        ⚠️ Low Stock Report
+    </a>
+    <a href="{{ url_for('reports.stock_movements') }}" class="btn btn-sm btn-secondary">
+        🔄 Stock Movement History
+    </a>
+</div>
+
+<!-- Metrics Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="card" style="margin-bottom: 0; padding: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Confirmed Orders in Range</div>
+        <div style="font-size: 26px; font-weight: 800; color: var(--text-main); margin-top: 4px;">{{ report.total_orders }}</div>
+    </div>
+    <div class="card" style="margin-bottom: 0; padding: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--success); text-transform: uppercase;">Total Sales (After Discount)</div>
+        <div style="font-size: 26px; font-weight: 800; color: var(--success); margin-top: 4px;">₹{{ "%.2f"|format(report.total_revenue) }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Customer Sales Performance</span>
+
+        <!-- Date Range Filter Form -->
+        <form method="GET" action="{{ url_for('reports.customer_sales') }}" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label style="font-size: 12px; color: var(--text-muted);">From:</label>
+            <input type="date" name="start_date" value="{{ report.start_date }}" class="form-control" style="width: 145px; padding: 5px 8px; font-size: 12px;">
+
+            <label style="font-size: 12px; color: var(--text-muted);">To:</label>
+            <input type="date" name="end_date" value="{{ report.end_date }}" class="form-control" style="width: 145px; padding: 5px 8px; font-size: 12px;">
+
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            {% if report.start_date or report.end_date %}
+                <a href="{{ url_for('reports.customer_sales') }}" class="btn btn-secondary btn-sm" title="Clear dates">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Email Address</th>
+                    <th>City</th>
+                    <th class="text-center">Confirmed Orders</th>
+                    <th class="text-right">Total Net Sales (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if report.data %}
+                    {% for row in report.data %}
+                    <tr>
+                        <td><strong>{{ row.customer_name }}</strong></td>
+                        <td>{{ row.customer_email or '-' }}</td>
+                        <td>{{ row.customer_city or '-' }}</td>
+                        <td class="text-center">
+                            {% if row.confirmed_order_count > 0 %}
+                                <span class="badge badge-success">{{ row.confirmed_order_count }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            {% if row.total_sales_after_discount > 0 %}
+                                <strong style="color: var(--primary);">₹{{ "%.2f"|format(row.total_sales_after_discount) }}</strong>
+                            {% else %}
+                                <span style="color: var(--text-muted);">₹0.00</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No customer records found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

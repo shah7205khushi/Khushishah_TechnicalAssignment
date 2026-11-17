@@ -90,4 +90,4 @@ def test_admin_route_accessible_for_admin(client):
     # Access admin-only route
     response = client.get('/reports/customer-sales')
     assert response.status_code == 200
-    assert b"Customer Sales Report Stub" in response.data
+    assert b"Customer Sales Summary" in response.data
