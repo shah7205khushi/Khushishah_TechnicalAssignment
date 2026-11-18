@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "Savyant Systems - Sales & Inventory API",
+    "_postman_id": "b3e0c7a1-8d93-4e9c-8461-fd61206f1aed",
+    "description": "Authenticated REST API endpoints for Savyant Systems Technical Assessment (Part 8).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"sales@savyant.com\",\n  \"password\": \"Sales@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Products - List Active Products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/products?search=&page=1&per_page=10",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "products"],
+          "query": [
+            { "key": "search", "value": "" },
+            { "key": "page", "value": "1" },
+            { "key": "per_page", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Orders - Create Draft Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_id\": 1,\n  \"discount_percentage\": 10,\n  \"items\": [\n    {\"product_id\": 1, \"quantity\": 2},\n    {\"product_id\": 2, \"quantity\": 3}\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/orders",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "orders"]
+        }
+      }
+    },
+    {
+      "name": "Orders - Get Order Details by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/orders/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "orders", "1"]
+        }
+      }
+    },
+    {
+      "name": "Orders - Confirm Order & Deduct Stock",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/orders/1/confirm",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "orders", "1", "confirm"]
+        }
+      }
+    },
+    {
+      "name": "Orders - Cancel Order & Restore Stock",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/orders/1/cancel",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "orders", "1", "cancel"]
+        }
+      }
+    }
+  ]
+}
