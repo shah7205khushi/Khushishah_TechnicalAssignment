@@ -41,32 +41,7 @@
                     Sign In to Portal
                 </button>
             </form>
-
-            <!-- Quick Demo Credentials for Interview Reviewers -->
-            <div class="demo-account-box">
-                <div class="demo-account-title">
-                    <span>⚡ Quick Demo Credentials</span>
-                    <span style="font-size: 10px; color: #64748b; font-weight: normal;">Click to autofill</span>
-                </div>
-                <div class="demo-btn-group">
-                    <button type="button" class="btn-demo" onclick="fillCredentials('admin@savyant.com', 'Admin@123')">
-                        <strong>Admin User</strong>
-                        <div style="font-size: 10.5px; color: #64748b;">Full Access</div>
-                    </button>
-                    <button type="button" class="btn-demo" onclick="fillCredentials('sales@savyant.com', 'Sales@123')">
-                        <strong>Sales User</strong>
-                        <div style="font-size: 10.5px; color: #64748b;">Orders Only</div>
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </div>
-
-<script>
-function fillCredentials(email, password) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = password;
-}
-</script>
 {% endblock %}
